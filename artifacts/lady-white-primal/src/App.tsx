@@ -1,6 +1,7 @@
 import { Switch, Route, Router as WouterRouter } from 'wouter';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import HoneyBackground from './components/HoneyBackground';
 import HomePage from './pages/HomePage';
 import CollectionsPage from './pages/CollectionsPage';
 import ProductPage from './pages/ProductPage';
@@ -41,7 +42,10 @@ function Router() {
 export default function App() {
   return (
     <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-      <Router />
+      <HoneyBackground />
+      <div style={{ position: 'relative', zIndex: 2 }}>
+        <Router />
+      </div>
     </WouterRouter>
   );
 }
