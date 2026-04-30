@@ -13,8 +13,8 @@ export default function HoneyBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef({ x: 0, y: 0 });
   const particlesRef = useRef<Particle[]>([]);
-  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
   const animationRef = useRef<number>();
+  const lastParticleTimeRef = useRef(0);
 
   // Honey color palette (golden amber tones)
   const honeyColors = [
@@ -42,19 +42,24 @@ export default function HoneyBackground() {
     // Mouse tracking
     const handleMouseMove = (e: MouseEvent) => {
       mouseRef.current = { x: e.clientX, y: e.clientY };
-      setCursorPos({ x: e.clientX, y: e.clientY });
 
-      // Create honey particles on mouse move
-      if (Math.random() > 0.7) {
-        for (let i = 0; i < 2; i++) {
-          particlesRef.current.push({
-            x: e.clientX + (Math.random() - 0.5) * 40,
-            y: e.clientY + (Math.random() - 0.5) * 40,
-            vx: (Math.random() - 0.5) * 4,
-            vy: (Math.random() - 0.5) * 4 - 2,
-            life: 1,
-            size: Math.random() * 4 + 2,
-          });
+      // Throttle particle creation to every 50ms to prevent memory bloat
+      const now = Date.now();
+      if (now - lastParticleTimeRef.current > 50) {
+        lastParticleTimeRef.current = now;
+        
+        // Create honey particles on mouse move
+        if (Math.random() > 0.6 && particlesRef.current.length < 150) {
+          for (let i = 0; i < 2; i++) {
+            particlesRef.current.push({
+              x: e.clientX + (Math.random() - 0.5) * 40,
+              y: e.clientY + (Math.random() - 0.5) * 40,
+              vx: (Math.random() - 0.5) * 4,
+              vy: (Math.random() - 0.5) * 4 - 2,
+              life: 1,
+              size: Math.random() * 4 + 2,
+            });
+          }
         }
       }
     };
@@ -69,16 +74,19 @@ export default function HoneyBackground() {
 
       // Draw flowing honey waves
       const time = Date.now() / 1000;
-      ctx.fillStyle = 'rgba(246, 166, 0, 0.15)';
 
-      // Create wave pattern
-      for (let x = 0; x < canvas.width; x += 40) {
-        for (let y = 0; y < canvas.height; y += 40) {
+      // Create wave pattern - optimized grid spacing
+      const gridSize = 50;
+      for (let x = 0; x < canvas.width; x += gridSize) {
+        for (let y = 0; y < canvas.height; y += gridSize) {
           const wave1 = Math.sin(x * 0.002 + time * 0.3) * 15;
           const wave2 = Math.cos(y * 0.002 + time * 0.4) * 15;
           const distance = Math.hypot(x - mouseRef.current.x, y - mouseRef.current.y);
 
           const size = Math.max(2, 8 - distance * 0.01);
+          
+          // Cache color selection for performance
+          const colorIndex = (Math.floor(x / gridSize) + Math.floor(y / gridSize)) % honeyColors.length;
 
           ctx.beginPath();
           ctx.arc(
@@ -88,7 +96,7 @@ export default function HoneyBackground() {
             0,
             Math.PI * 2
           );
-          ctx.fillStyle = honeyColors[Math.floor(Math.random() * honeyColors.length)];
+          ctx.fillStyle = honeyColors[colorIndex];
           ctx.fill();
         }
       }
@@ -122,17 +130,18 @@ export default function HoneyBackground() {
 
       // Draw bee cursor
       const beeSize = 24;
-      const angle = Math.atan2(mouseRef.current.y - cursorPos.y, mouseRef.current.x - cursorPos.x);
+      const beeX = mouseRef.current.x;
+      const beeY = mouseRef.current.y;
 
       // Bee body (yellow/gold)
       ctx.fillStyle = 'rgb(246, 166, 0)';
       ctx.beginPath();
       ctx.ellipse(
-        cursorPos.x,
-        cursorPos.y,
+        beeX,
+        beeY,
         beeSize * 0.6,
         beeSize * 0.4,
-        angle,
+        0,
         0,
         Math.PI * 2
       );
@@ -142,24 +151,25 @@ export default function HoneyBackground() {
       ctx.strokeStyle = 'rgb(18, 18, 18)';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(cursorPos.x - 4, cursorPos.y, 3, 0, Math.PI * 2);
+      ctx.arc(beeX - 4, beeY, 3, 0, Math.PI * 2);
       ctx.stroke();
       ctx.beginPath();
-      ctx.arc(cursorPos.x + 4, cursorPos.y, 3, 0, Math.PI * 2);
+      ctx.arc(beeX + 4, beeY, 3, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Bee wings
+      // Bee wings - animated
       ctx.strokeStyle = 'rgba(18, 18, 18, 0.4)';
       ctx.lineWidth = 1;
+      const wingFlap = Math.sin(time * 10) * 0.3;
       for (let i = 0; i < 2; i++) {
         ctx.beginPath();
         const wingOffset = i === 0 ? -8 : 8;
         ctx.ellipse(
-          cursorPos.x + wingOffset,
-          cursorPos.y - 8,
+          beeX + wingOffset,
+          beeY - 8,
           6,
           10,
-          Math.sin(Date.now() / 100) * 0.5,
+          wingFlap,
           0,
           Math.PI * 2
         );
@@ -171,7 +181,7 @@ export default function HoneyBackground() {
       ctx.strokeStyle = 'rgba(246, 166, 0, 0.2)';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(cursorPos.x, cursorPos.y, rippleRadius, 0, Math.PI * 2);
+      ctx.arc(beeX, beeY, rippleRadius, 0, Math.PI * 2);
       ctx.stroke();
 
       animationRef.current = requestAnimationFrame(animate);
@@ -186,7 +196,7 @@ export default function HoneyBackground() {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, []);
+  }, [honeyColors]);
 
   return (
     <canvas
