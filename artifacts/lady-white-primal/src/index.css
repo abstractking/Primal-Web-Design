@@ -81,6 +81,11 @@ body {
   color: rgb(var(--color-foreground));
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  cursor: none;
+}
+
+html {
+  cursor: none;
 }
 
 a {
