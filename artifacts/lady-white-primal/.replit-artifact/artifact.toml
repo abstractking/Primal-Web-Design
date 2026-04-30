@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Lady White Primal Skin"
+version = "1.0.0"
+id = "artifacts/lady-white-primal"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24613
+
+[services.development]
+run = "pnpm --filter @workspace/lady-white-primal run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/lady-white-primal", "run", "build" ]
+publicDir = "artifacts/lady-white-primal/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24613"
+BASE_PATH = "/"
