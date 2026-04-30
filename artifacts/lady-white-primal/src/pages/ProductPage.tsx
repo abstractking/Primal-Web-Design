@@ -98,12 +98,14 @@ export default function ProductPage() {
               </div>
 
               <div className="product-page__cta">
-                <button className="btn btn--primary" onClick={() => alert('Add to cart — this is a static demo site.')}>
-                  Add to cart
-                </button>
-                <button className="btn btn--secondary" onClick={() => alert('Buy now — this is a static demo site.')}>
-                  Buy it now
-                </button>
+                <a
+                  href={`https://www.ladywhiteprimal.com/products/${product.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn--primary"
+                >
+                  View on Store
+                </a>
               </div>
             </div>
           </div>
